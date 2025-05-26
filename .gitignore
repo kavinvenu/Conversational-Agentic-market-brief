@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.log
+*.sqlite3
+*.db
+*.tmp
+*.temp
+
+# Virtual environments
+agent_market_brief/
+.env/
+.envrc
+.venv/
+env/
+
+# IDE/editor folders
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# FastAPI static/uploads (if any)
+uploads/
+temp.wav
+
+# PyTorch/Whisper cache (if used)
+~/.cache/
+whisper_cache/
+__whisper_cache__/
+
+# Jupyter/IPython
+.ipynb_checkpoints/
+*.ipynb
+
+# Tests
+htmlcov/
+.tox/
+.nox/
+coverage.*
+.cache
+pytest_cache/
+
+# Ignore build/dist artifacts
+build/
+dist/
+*.egg-info/
+
+# VS Code Python extension environment (if applicable)
+.python-version
+
+# Docker
+*.dockerfile
+*.container
