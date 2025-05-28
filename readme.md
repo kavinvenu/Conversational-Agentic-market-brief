@@ -67,6 +67,8 @@ flowchart TD
     E --> F[🗨️ Synthesized Response]
     F --> G[🔊 Streamlit Plays Response]
 
+```
+
 🚧 Future Improvements
 ✅ Replace simulated LLM with real Gemini API
 
