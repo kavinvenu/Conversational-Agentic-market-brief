@@ -2,7 +2,8 @@
 
 A multi-agent architecture for real-time financial intelligence using LLMs, speech interfaces, and live data pipelines.
 
-[Uploading RecordedVideoWithSeeking (1).webm…]()
+[Working demo](https://github.com/user-attachments/assets/861800d5-12b4-4b56-bc91-5b445df242bc) 
+
 ---
 
 ## 🚀 Getting Started
