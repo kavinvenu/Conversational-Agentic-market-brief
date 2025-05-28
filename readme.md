@@ -2,6 +2,7 @@
 
 A multi-agent architecture for real-time financial intelligence using LLMs, speech interfaces, and live data pipelines.
 
+[Uploading RecordedVideoWithSeeking (1).webm…]()
 ---
 
 ## 🚀 Getting Started
@@ -44,6 +45,7 @@ BeautifulSoup – Web scraping for earnings reports and financial news
 Gemini 3.5 Flash – LLM for synthesis and decision making
 
 🔍 Why Gemini 3.5 Flash?
+
 Lightning-fast responses
 
 Robust dynamic prompt handling
@@ -52,22 +54,22 @@ Great synthesis of structured + unstructured data
 
 Designed for Retrieval-Augmented Generation (RAG)
 
-```mermaid
-flowchart TD
-    A[🎤 User Speaks Query] --> B[🗣️ Streamlit Converts to Text]
-    B --> C[📤 Sends to Orchestrator (FastAPI)]
-    C --> D1[📊 API Agent - Yahoo Finance]
-    C --> D2[🔍 Scraping Agent - Earnings]
-    C --> D3[📚 Retriever Agent - FAISS]
-    C --> D4[📈 Risk Analysis Agent]
-    D1 --> E[🧠 Gemini LLM]
-    D2 --> E
-    D3 --> E
-    D4 --> E
-    E --> F[🗨️ Synthesized Response]
-    F --> G[🔊 Streamlit Plays Response]
+User (Mic Input)
+     ↓
+📌 1. Voice Agent (STT - Whisper)
+     ↓
+📌 2. Orchestrator (FastAPI)
+     ├──→ 📡 API Agent → Yahoo Finance / Portfolio CSV
+     ├──→ 🕷️ Scraping Agent → Yahoo/Earnings Reports
+     ├──→ 🧠 Retriever Agent → FAISS + Embedded Docs
+     ├──→ 📊 Analysis Agent → AUM calculations
+     ↓
+📌 3. Language Agent (LLM + LangChain)
+     ↓
+📌 4. Voice Agent (TTS - pyttsx3/Coqui)
+     ↓
+Streamlit UI: Text + Audio Output
 
-```
 
 🚧 Future Improvements
 ✅ Replace simulated LLM with real Gemini API
