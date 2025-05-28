@@ -52,6 +52,21 @@ Great synthesis of structured + unstructured data
 
 Designed for Retrieval-Augmented Generation (RAG)
 
+```mermaid
+flowchart TD
+    A[🎤 User Speaks Query] --> B[🗣️ Streamlit Converts to Text]
+    B --> C[📤 Sends to Orchestrator (FastAPI)]
+    C --> D1[📊 API Agent - Yahoo Finance]
+    C --> D2[🔍 Scraping Agent - Earnings]
+    C --> D3[📚 Retriever Agent - FAISS]
+    C --> D4[📈 Risk Analysis Agent]
+    D1 --> E[🧠 Gemini LLM]
+    D2 --> E
+    D3 --> E
+    D4 --> E
+    E --> F[🗨️ Synthesized Response]
+    F --> G[🔊 Streamlit Plays Response]
+
 🚧 Future Improvements
 ✅ Replace simulated LLM with real Gemini API
 
