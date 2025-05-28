@@ -1,31 +1,33 @@
-import pandas as pd
-from typing import Optional, Dict
+# api_agent.py
+from fastapi import FastAPI, Query
+import yfinance as yf
+from typing import List
 
-def analyze_portfolio(csv_path: str) -> Optional[Dict[str, float]]:
+app = FastAPI(title="API Agent - Market Data")
+
+@app.get("/market_data")
+async def market_data(
+    tickers: List[str] = Query(..., description="List of stock tickers"),
+    start_date: str = Query(None, description="Start date YYYY-MM-DD"),
+    end_date: str = Query(None, description="End date YYYY-MM-DD")
+):
     """
-    Analyze portfolio CSV for total AUM and Asia Tech allocation percentage.
-    
-    Args:
-        csv_path (str): Path to portfolio CSV file.
-        
-    Returns:
-        Optional[Dict[str, float]]: Dictionary with total AUM and Asia Tech %,
-        or None if error or invalid data.
+    Fetches historical stock data for tickers.
+    Example: /market_data?tickers=TSM,005930.KS&start_date=2023-05-01&end_date=2023-05-27
     """
-    try:
-        df = pd.read_csv(csv_path)
-        total_aum = df['AUM'].sum()
-        if total_aum == 0:
-            return None
-
-        asia_tech = df[(df['Region'] == 'Asia') & (df['Sector'] == 'Tech')]
-        asia_tech_aum = asia_tech['AUM'].sum()
-        asia_tech_pct = (asia_tech_aum / total_aum) * 100
-
-        return {
-            "total_aum": total_aum,
-            "asia_tech_pct": round(asia_tech_pct, 2)
-        }
-    except Exception as e:
-        print(f"Error analyzing portfolio: {e}")
-        return None
+    response = {}
+    for ticker in tickers:
+        stock = yf.Ticker(ticker)
+        hist = stock.history(start=start_date, end=end_date)
+        if hist.empty:
+            response[ticker] = "No data found"
+        else:
+            close_price = hist['Close'].iloc[-1]
+            change = None
+            if len(hist) > 1:
+                change = ((close_price - hist['Close'].iloc[-2]) / hist['Close'].iloc[-2]) * 100
+            response[ticker] = {
+                "close_price": close_price,
+                "percent_change": round(change, 2) if change is not None else None
+            }
+    return {"data": response}

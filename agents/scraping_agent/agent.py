@@ -1,23 +1,30 @@
-import requests
-from bs4 import BeautifulSoup
+# scraping_agent.py
+from fastapi import FastAPI, Query
+from yahoo_earnings_calendar import YahooEarningsCalendar
+from typing import List
 
-def scrape_earnings(symbols):
-    results = {}
-    for symbol in symbols:
-        url = f"https://finance.yahoo.com/quote/{symbol}/analysis"
-        resp = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
-        soup = BeautifulSoup(resp.text, "html.parser")
+app = FastAPI(title="Scraping Agent - Earnings Surprises")
 
-        # Fallback: Dummy logic – customize with exact parsing if needed
-        summary = soup.find("section")
-        if summary:
-            if "beat" in summary.text.lower():
-                results[symbol] = "+4%"
-            elif "miss" in summary.text.lower():
-                results[symbol] = "-2%"
+@app.get("/earnings_surprises")
+async def earnings_surprises(tickers: List[str] = Query(...)):
+    """
+    Returns earnings surprise percentages for the given tickers if available.
+    """
+    yec = YahooEarningsCalendar()
+    surprises = {}
+    for ticker in tickers:
+        try:
+            earnings = yec.get_earnings_of(ticker)
+            # Pick most recent earnings release
+            if earnings:
+                latest = earnings[0]
+                surprise = latest.get('epsactual', None) - latest.get('epsestimate', None)
+                surprise_pct = None
+                if surprise is not None and latest.get('epsestimate') != 0:
+                    surprise_pct = (surprise / latest.get('epsestimate')) * 100
+                surprises[ticker] = round(surprise_pct, 2) if surprise_pct else None
             else:
-                results[symbol] = "0%"
-        else:
-            results[symbol] = "N/A"
-
-    return results
+                surprises[ticker] = None
+        except Exception as e:
+            surprises[ticker] = None
+    return {"earnings_surprises": surprises}

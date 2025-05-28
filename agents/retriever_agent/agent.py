@@ -1,54 +1,47 @@
-from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings  # updated import
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.docstore.document import Document
-import pickle
+# retriever_agent.py
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import List
+import faiss
+import numpy as np
+from sentence_transformers import SentenceTransformer
 
-def build_index(text_path: str, index_path: str = "faiss_index", persist_path: str = "faiss_store.pkl") -> None:
-    """
-    Build a FAISS vector store index from a raw text file and save it locally.
-    
-    Args:
-        text_path (str): Path to the raw text file.
-        index_path (str): Directory path to save the FAISS index files.
-        persist_path (str): File path to save the pickled FAISS DB object.
-    """
-    try:
-        with open(text_path, 'r', encoding='utf-8') as f:
-            raw_text = f.read()
+app = FastAPI(title="Retriever Agent")
 
-        text_splitter = CharacterTextSplitter(separator="\n", chunk_size=1000, chunk_overlap=100)
-        texts = text_splitter.split_text(raw_text)
-        docs = [Document(page_content=t) for t in texts]
+model = SentenceTransformer('all-MiniLM-L6-v2')
 
-        embedding = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-        db = FAISS.from_documents(docs, embedding)
+# In-memory FAISS index & documents store (in production, persist/load from disk)
+index = None
+documents = []
 
-        db.save_local(index_path)
-        with open(persist_path, "wb") as f:
-            pickle.dump(db, f)
-        
-        print(f"Index built and saved to {index_path} and {persist_path}")
-    except Exception as e:
-        print(f"Error building index: {e}")
+class Document(BaseModel):
+    id: str
+    text: str
 
-def get_relevant_chunks(query: str, index_path: str = "faiss_index") -> list[str]:
-    """
-    Load FAISS index and retrieve relevant text chunks for the query.
-    
-    Args:
-        query (str): User query string.
-        index_path (str): Directory path where the FAISS index is stored.
-    
-    Returns:
-        list[str]: List of top-k relevant document chunks.
-    """
-    try:
-        embedding = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-        db = FAISS.load_local(index_path, embedding, allow_dangerous_deserialization=True)
-        results = db.similarity_search(query, k=3)
-        return [res.page_content for res in results]
-    except Exception as e:
-        print(f"Error loading index or searching: {e}")
-        return []
+@app.post("/index_documents")
+async def index_documents(docs: List[Document]):
+    global index, documents
+    texts = [doc.text for doc in docs]
+    embeddings = model.encode(texts, convert_to_numpy=True)
+    d = embeddings.shape[1]
 
+    if index is None:
+        index = faiss.IndexFlatL2(d)
+
+    index.add(embeddings)
+    documents.extend(docs)
+    return {"message": f"Indexed {len(docs)} documents."}
+
+@app.get("/search")
+async def search(query: str, top_k: int = 5):
+    global index, documents
+    if index is None or len(documents) == 0:
+        raise HTTPException(status_code=400, detail="No documents indexed yet.")
+
+    query_embedding = model.encode([query], convert_to_numpy=True)
+    D, I = index.search(query_embedding, top_k)
+    results = []
+    for idx in I[0]:
+        if idx < len(documents):
+            results.append({"id": documents[idx].id, "text": documents[idx].text})
+    return {"results": results}

@@ -1,10 +1,17 @@
-import pyttsx3
+from TTS.api import TTS
 import io
 
+# Initialize TTS model (you can use Coqui TTS or other)
+tts = TTS(model_name="tts_models/en/ljspeech/tacotron2-DDC", progress_bar=False, gpu=False)
+
 def synthesize_speech(text: str) -> bytes:
-    engine = pyttsx3.init()
-    # Save speech to bytes buffer (pyttsx3 does not natively support saving to bytes, workaround needed)
-    # For simplicity, let's just run say and ignore return audio bytes for now
-    engine.say(text)
-    engine.runAndWait()
-    return b""  # placeholder, can implement saving to WAV file and reading bytes if needed
+    """
+    Generate speech audio bytes from text using Coqui TTS.
+    """
+    wav = tts.tts(text)
+    # Convert numpy array wav to bytes (WAV format)
+    import soundfile as sf
+
+    buf = io.BytesIO()
+    sf.write(buf, wav, samplerate=tts.synthesizer.output_sample_rate, format="WAV")
+    return buf.getvalue()
